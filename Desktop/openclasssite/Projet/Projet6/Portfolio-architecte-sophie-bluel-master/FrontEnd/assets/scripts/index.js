@@ -1,4 +1,7 @@
 import { getData, deleteElement } from "./api.js";
+import { logout, getToken } from "./authentication.js";
+import { openModal } from "./modal.js";
+
 
 // Objet global contenant tous les projets et catégories.
 const data = {
@@ -7,6 +10,9 @@ const data = {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Si le jeton d'authentification est présent, on affiche le site en mode édition.
+    const token = getToken();
+    token && renderEditionMode();
     try {
         // Récupération des projets.
         data.works = await getWorks();
@@ -14,8 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         data.categories = await getCategories();
         // Affichage des projets.
         renderWorks(data.works);
-        // Affichage des catégories.
-        renderCategories(data.categories);
+        // Affichage des catégories si non connecté.
+        !token && renderCategories(data.categories);
     } catch(error) {
         console.error(error);
     }
@@ -52,12 +58,36 @@ function generateWorkHTML(work) {
 
 /**
  * Fonction permettant d'afficher les boutons de catégories.
- * @param {Array} categories Tableau de catégories à afficher
+ * @param {Array} categories Tableau de catégories à afficher                               
  */
-function renderCategories(workcategories) {
-    
+function renderCategories(categories) {
+    const filters = document.querySelector(".filters");
+    filters.innerHTML += generateCategoryHTML({ id: 0, name: "Tous" }, true);
 
-    // @TODO : Implémenter cette fonction.
+    for (let category of categories) {
+        const button = generateCategoryHTML(category);
+        filters.innerHTML += button;
+    }
+
+    // Ajoute des gestionnaires d'événements pour chaque bouton de catégorie
+    const buttons = document.querySelectorAll(".filter-btn");
+    buttons.forEach(button => {
+        button.addEventListener("click", () => {
+            toggleActiveFilter(button);
+            const id = Number(button.dataset.id);
+            filterWorksByCategory(id);
+        });
+    });
+}
+
+/**
+ * Fonction permettant de mettre en avant le filtre sélectionné.
+ * @param {Element} button Bouton (HTML) de filtre
+ */
+function toggleActiveFilter(button) {
+    const active = document.querySelector(".filter-btn-active");
+    active.classList.remove("filter-btn-active");
+    button.classList.add("filter-btn-active");
 }
 
 /**
@@ -65,20 +95,25 @@ function renderCategories(workcategories) {
  * @param {Object} category Objet représentant une catégorie.
  * @returns {string} HTML représentant l'affichage d'un bouton de catégorie.
  */
-function generateCategoryHTML(category) {
-    // @TODO : Implémenter cette fonction.
-    return ``;
+function generateCategoryHTML(category, active = false) {
+    return `
+    <button class="${active ? "filter-btn filter-btn-active" : "filter-btn"}" data-id="${category.id}">
+        ${category.name}
+    </button>`;
 }
 
 /**
  * Fonction permettant de filtrer les projets par catégorie.$
- * @param {Object} category Object représentant une catégorie (avec laquelle on veut filtrer).
+ * @param {number} id Identifiant représentant la catégorie (avec laquelle on veut filtrer).
  */
-function filterWorksByCategory(category) {
-    // @TODO : Compléter cette fonction.
-    // Précisions : Bien penser au cas où on ne filtre pas (soit la catégorie "Tous").
-    const works = data.works.filter();
-    renderWorks(works);
+function filterWorksByCategory(id) {
+    if (!id) {
+        renderWorks(data.works);
+    } else {
+        // Filtrer les projets par catégorie
+        const works = data.works.filter(work => work.categoryId === id);
+        renderWorks(works);
+    }
 }
 
 
@@ -88,7 +123,7 @@ function filterWorksByCategory(category) {
  */
 async function getWorks() {
     try {
-        return await getData("/works");
+        return await getData("/works")
     } catch (error) {
         console.error(error);
         throw Error("Une erreur est survenue lors de la récupération des projets.");
@@ -119,4 +154,18 @@ async function deleteWork(id) {
         console.error(error);
         throw Error("Une erreur est survenue lors de la suppression d'un projet.")
     }
+}
+
+
+/**
+ * Fonction permettant d'afficher le site en mode édition.
+ */
+
+function renderEditionMode() {
+    // Affichage et modification des éléments s'affichant au chargement de la page.
+    document.querySelector("#login-action").textContent = "logout";
+    document.querySelector("#edition-header").style.display = "block";
+    const openModalButton = document.querySelector("#open-modal");
+    openModalButton.style.display = "inline-block";
+    openModalButton.addEventListener("click", openModal);
 }

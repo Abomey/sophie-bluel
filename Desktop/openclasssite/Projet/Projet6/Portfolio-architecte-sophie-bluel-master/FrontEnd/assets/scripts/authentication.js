@@ -12,12 +12,23 @@ async function login(email, password) {
     });
     if (response.ok) {
         const { token } = await response.json();
+        // Enregistrement du jeton d'authentification dans le localStorage.
         localStorage.setItem("token", token);
     } else {
-        throw Error("Une erreur est survenue lors de la récupération des projets.");
+        throw Error("L'email et/ou le mot de passe fourni est invalide.");
     }
 }
 
 function logout() {
     localStorage.removeItem("token");
 }
+
+function getToken() {
+    return localStorage.getItem("token");
+}
+
+function setToken(token) {
+    localStorage.setItem("token", token);
+}
+
+export { login, logout, getToken, setToken };

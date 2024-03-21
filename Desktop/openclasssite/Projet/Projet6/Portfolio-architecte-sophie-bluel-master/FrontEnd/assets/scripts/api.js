@@ -12,7 +12,7 @@ async function getData(endpoint) {
     
     if (response.ok) {
         const data = await response.json();
-        console.log(data)
+        //console.log(data)
         return data;
     // Sinon, on lance une erreur.
     } else {
@@ -45,6 +45,20 @@ async function deleteElement(endpoint) {
     } else {
         throw Error("Une erreur est survenue. Aucun jeton d'authentification/autorisation n'a été fournie.")
     }
+}
+
+// @TODO : Créer la fonction d'envoi d'un élément (work), comme par exemple une méthode postElement
+
+async function postElement(endpoint, data) {
+        // Récupération du jeton d'autorisation.
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                // @TODO : Envoyer un élément avec la fonction fetch, avec en options la méthode POST, les headers et le body qui sera constitué des données.
+            } catch (error) {
+                // @TODO : Générer les cas d'erreur.
+            }
+        }
 }
 
 export { getData, deleteElement };
