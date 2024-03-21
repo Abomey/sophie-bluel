@@ -1,31 +1,22 @@
-import { getData } from "./api.js";
+import { deleteElement } from "./api.js";
+import { data, getWorks, renderWorks } from "./index.js";
 
-const data = {
-    works: [],
-    categories: []
-};
-
+/**
+ * 
+ */
 function openModal() {
     document.querySelector("#edition-modal").style.display = "flex";
     // Blocage du scroll (à retirer lors de la fermeture de la modale)
     document.body.style.overflow = "hidden";
     
     // Assurez-vous d'avoir les travaux avant de les afficher
-    getWorksInModal();
+    renderWorksInModal(data.works);
+    addDeleteEvents();
 }
 
-async function getWorksInModal() {
-    try {
-        // Récupérer les travaux depuis l'API
-        data.works = await getData("/works");
-        // Appeler la fonction pour afficher les travaux dans la modale
-        renderWorksInModal(data.works);
-    } catch (error) {
-        console.error(error);
-        // Gérer les erreurs de récupération des travaux depuis l'API
-    }
-}
-
+/**
+ * 
+ */
 function renderWorksInModal(works) {
     const modalGallery = document.querySelector(".modal-gallery");
     // Vidage de la galerie en utilisant une chaîne de caractères vide.
@@ -38,11 +29,56 @@ function renderWorksInModal(works) {
     }
 }
 
+/**
+ * 
+ */
 function generateWorkHTMLInModal(work) {
     return `<figure>
         <img src="${work.imageUrl}" alt="${work.title}">
-        <i class="fa-solid fa-trash-can" id="trashcan"></i>
+        <i class="fa-solid fa-trash-can" data-id=${work.id}></i>
     </figure>`;
+}
+
+/**
+ * Fonction permettant d'ajouter les évènements de suppression sur les icones de corbeilles.
+ */
+function addDeleteEvents() {
+    const trashes = document.querySelectorAll(".fa-trash-can");
+    trashes.forEach(trash => {
+        trash.addEventListener("click", async () => {
+            const id = trash.dataset.id;
+            try {
+                await deleteWork(id);
+                refreshWorks(data.works);
+            } catch (error) {
+                alert(error.message);
+            }
+          
+        })
+    })
+}
+
+/**
+ * Fonction permettant de supprimer un projet.
+ * @param {number} id Identifiant du projet
+ */
+async function deleteWork(id) {
+    try {
+        await deleteElement(`/works/${id}`)
+        data.works = data.works.filter(work => work.id !== id);
+    } catch (error) {
+        console.error(error);
+        throw Error("Une erreur est survenue lors de la suppression d'un projet.")
+    }
+}
+
+/**
+ * Fonction permettant de rafraichir la liste des projets (dans la gallerie et la modale).
+ * @param {Array} works Tableau de projet à afficher
+ */
+function refreshWorks(works) {
+    renderWorks(works);
+    renderWorksInModal(works);
 }
     
 // @TODO: Modifier le HTML pour l'affichage dans la modale, incluant l'icone de suppression.

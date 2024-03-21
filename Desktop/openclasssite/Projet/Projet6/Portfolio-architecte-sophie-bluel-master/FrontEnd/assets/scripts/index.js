@@ -4,7 +4,7 @@ import { openModal } from "./modal.js";
 
 
 // Objet global contenant tous les projets et catégories.
-const data = {
+export const data = {
     works: [],
     categories: []
 };
@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 /**
  * Fonction permettant d'afficher les projets au sein de la gallerie.
- * @param {Array} Tableau de projets à afficher
+ * @param {Array} works Tableau de projets à afficher
  */
-function renderWorks(works) {
+export function renderWorks(works) {
     const gallery = document.querySelector(".gallery");
     // Vidage de la gallerie en utilisant une chaine de caratères vide.
     gallery.innerHTML = "";
@@ -121,7 +121,7 @@ function filterWorksByCategory(id) {
  * Fonction permettant de récupérer les projets.
  * @returns {Array} Tableau de projets
  */
-async function getWorks() {
+export async function getWorks() {
     try {
         return await getData("/works")
     } catch (error) {
@@ -143,19 +143,6 @@ async function getCategories() {
     }
 }
 
-/**
- * Fonction permettant de supprimer un projet.
- * @param {number} id Identifiant du projet
- */
-async function deleteWork(id) {
-    try {
-        await deleteElement(`/works/${id}`)
-    } catch (error) {
-        console.error(error);
-        throw Error("Une erreur est survenue lors de la suppression d'un projet.")
-    }
-}
-
 
 /**
  * Fonction permettant d'afficher le site en mode édition.
@@ -167,5 +154,9 @@ function renderEditionMode() {
     document.querySelector("#edition-header").style.display = "block";
     const openModalButton = document.querySelector("#open-modal");
     openModalButton.style.display = "inline-block";
-    openModalButton.addEventListener("click", openModal);
+    openModalButton.addEventListener("click", () => {
+        openModal(data.works);
+    });
 }
+
+
